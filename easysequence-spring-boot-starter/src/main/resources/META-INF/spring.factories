@@ -1,0 +1,4 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.openquartz.sequence.starter.spring.boot.autoconfig.EasySequenceCreatorAutoConfiguration,\
+com.openquartz.sequence.starter.spring.boot.autoconfig.EasySequenceSnowflakeAutoConfiguration,\
+com.openquartz.sequence.starter.spring.boot.autoconfig.EasySequenceLeafAutoConfiguration
