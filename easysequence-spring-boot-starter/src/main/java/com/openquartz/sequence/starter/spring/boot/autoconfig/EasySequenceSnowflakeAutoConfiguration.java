@@ -89,7 +89,7 @@ public class EasySequenceSnowflakeAutoConfiguration {
     private void checkWorkerIdProperty(WorkerId workerId, Integer maxId) {
         Asserts.isTrue(workerId.getMin() >= WorkerIdConstants.MIN_WORKER_ID, SNOWFLAKE_WORKER_ID_OVER_ERROR,
             WorkerIdConstants.MIN_WORKER_ID, maxId);
-        Asserts.isTrue(workerId.getMax() < maxId, SNOWFLAKE_WORKER_ID_OVER_ERROR,
+        Asserts.isTrue(workerId.getMax() <= maxId, SNOWFLAKE_WORKER_ID_OVER_ERROR,
             WorkerIdConstants.MIN_WORKER_ID, maxId);
     }
 
