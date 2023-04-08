@@ -29,7 +29,8 @@ easysequence.uid.snowflake.default-group=default
 2、**Cache模式** 采用百度的 [UidGenerator](https://github.com/baidu/uid-generator) 实现
 
 > 相较于标准版本的实现CacheUidGenerator 性能更高。 具体的选择可以自己根据实际场景进行切换选择。用户可以实现一键配置`easysequence.uid.snowflake.type`自定义切换。
-`default`: 表示标准版本;`cache`: 表示百度的CacheUidGenerator实现。
+>
+> `default`: 表示标准版本;`cache`: 表示百度的CacheUidGenerator实现。
 
 - 1、**标准模式** 使用dataCenterId+workerId 模式构成。所以最大workerId范围在[0,32)。用户也可在这个范围内进行缩小
 - 2、**Cache模式** 的workerId 使用 workerId模式构成。workerId最大范围在[0,1024)
