@@ -55,6 +55,7 @@ public interface UidProvider {
 ```
 
 类关系图
+
 ![UidProvider](./doc/image/UidProvider.png)
 
 ### 雪花ID
