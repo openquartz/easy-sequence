@@ -73,71 +73,19 @@ public class WorkerNodeDAO {
     }
 
     /**
-     * do apply worker
+     * 刷新 workerNode
      *
-     * @param minId minId
      * @param group group
      * @param uidKey uidKey
-     * @param processId process
-     * @param ip local ip
-     * @param expireInterval worker expire interval
-     * @return key: exist flag, value: work node
+     * @param processId processId
+     * @param ip ip
+     * @param expireInterval 过期时间间隔
+     * @param workerNode workNode
+     * @return workNode
      */
-    public Pair<Boolean, WorkerNode> doApplyWorkerFromExistExpire(Long minId, String group, String uidKey,
-        String processId, String ip, long expireInterval) {
-
-        WorkerNode workerNode = jdbcTemplate.queryForObject(SELECT_ID_FOR_UPDATE, new WorkerNodeRowMapper(), minId);
-
-        if (workerNode == null) {
-            return Pair.of(false, null);
-        }
-
-        if (workerNode.getLastExpireTime().compareTo(new Date()) < 0) {
-
-            // refresh work node
-            WorkerNode node = refreshWorkNode(group, uidKey, processId, ip, expireInterval, workerNode);
-
-            return Pair.of(true, node);
-        }
-        return new Pair<>(false, null);
-    }
-
-
-    /**
-     * do apply worker
-     *
-     * @param selfId selfId
-     * @param group group
-     * @param uidKey uidKey
-     * @param processId process
-     * @param ip local ip
-     * @param expireInterval worker expire interval
-     * @return key: exist flag, value: work node
-     */
-    public Pair<Boolean, WorkerNode> doApplyWorkerFromExistSelf(Long selfId, String group, String uidKey,
-        String processId, String ip, long expireInterval) {
-
-        WorkerNode workerNode = jdbcTemplate.queryForObject(SELECT_ID_FOR_UPDATE, new WorkerNodeRowMapper(), selfId);
-
-        if (workerNode == null) {
-            return Pair.of(false, null);
-        }
-
-        // work node expire or work node belong self
-        boolean canApply = workerNode.getLastExpireTime().compareTo(new Date()) < 0
-            || (Objects.equals(group, workerNode.getGroup()) && Objects.equals(ip, workerNode.getIp()));
-        if (canApply) {
-
-            // refresh work nde
-            WorkerNode node = refreshWorkNode(group, uidKey, processId, ip, expireInterval, workerNode);
-
-            return Pair.of(true, node);
-        }
-        return new Pair<>(false, null);
-    }
-
-    private WorkerNode refreshWorkNode(String group, String uidKey, String processId, String ip, long expireInterval,
+    public WorkerNode refreshWorkNode(String group, String uidKey, String processId, String ip, long expireInterval,
         WorkerNode workerNode) {
+
         WorkerNode node = new WorkerNode();
         node.setId(workerNode.getId());
         node.setWorkerId(workerNode.getWorkerId());
@@ -150,6 +98,16 @@ public class WorkerNodeDAO {
         // update work node info
         updateById(node);
         return node;
+    }
+
+    /**
+     * selectForUpdate workNode
+     *
+     * @param id id
+     * @return work-node
+     */
+    public WorkerNode selectForUpdate(Long id) {
+        return jdbcTemplate.queryForObject(SELECT_ID_FOR_UPDATE, new WorkerNodeRowMapper(), id);
     }
 
     public Integer getMaxWorkerId(String group) {

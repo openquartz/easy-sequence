@@ -14,6 +14,7 @@ import com.openquartz.sequence.starter.persist.WorkerNodeDAO;
 import com.openquartz.sequence.starter.transaction.TransactionSupport;
 import java.lang.management.ManagementFactory;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -183,15 +184,21 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
      * 如果数据达到最大，则阻止进程启动
      */
     private void insertWorker() {
+        Integer currentWorkerId = workerNodeDAO.getMaxWorkerId(property.getGroup());
         for (long i = property.getMinWorkerId(); i < property.getMaxWorkerId(); i++) {
             try {
-                doInsertWorkerId();
+                doInsertWorkerId(currentWorkerId);
                 return;
             } catch (EasySequenceException ex) {
                 throw ex;
             } catch (Exception ex) {
-                log.warn("[DatabaseWorkerIdAssigner#insertWorkerId]group:{} allocate occur error!errorMsg:{}",
+                log.warn("[DatabaseWorkerIdAssigner#insertWorkerId] group:{} allocate occur error!errorMsg:{}",
                     property.getGroup(), ex.getMessage());
+                if (currentWorkerId == null) {
+                    currentWorkerId = workerNodeDAO.getMaxWorkerId(property.getGroup());
+                } else {
+                    currentWorkerId++;
+                }
             }
         }
         Asserts.notNull(workerNode, SnowflakeExceptionCode.GROUP_WORKER_ASSIGN_ERROR);
@@ -200,20 +207,17 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
     /**
      * do insert workerId
      */
-    private void doInsertWorkerId() {
-        Integer maxWorkerId = workerNodeDAO.getMaxWorkerId(property.getGroup());
+    private void doInsertWorkerId(Integer maxWorkerId) {
         if (maxWorkerId == null) {
-            workerNode = workerNodeDAO
-                .addWorkerNode(generateWorkerNode(Long.valueOf(property.getMinWorkerId()).intValue()));
+            workerNode = workerNodeDAO.addWorkerNode(generateWorkerNode((int) property.getMinWorkerId()));
         } else {
+            // 做 loop 重置
             if (maxWorkerId + 1 < property.getMaxWorkerId()) {
                 workerNode = workerNodeDAO.addWorkerNode(generateWorkerNode(maxWorkerId + 1));
             } else {
-                log.error(
-                    "[DatabaseWorkerIdAssigner#doInsertWorkerId] group:{} has full worker,insert workerId error!",
-                    property.getGroup());
-                throw EasySequenceException
-                    .replacePlaceHold(SnowflakeExceptionCode.GROUP_WORKER_FULL_ERROR, property.getGroup());
+                // 当前loop 重置后得到的workerId
+                long workerId = maxWorkerId + 1 - property.getMaxWorkerId() + property.getMinWorkerId();
+                workerNode = workerNodeDAO.addWorkerNode(generateWorkerNode((int) workerId));
             }
         }
     }
@@ -254,13 +258,71 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
 
         // tx
         Pair<Boolean, WorkerNode> pair = transactionSupport
-            .call(() -> workerNodeDAO.doApplyWorkerFromExistExpire(minId, property.getGroup(), uidKey, processId, ip,
+            .call(() -> doApplyWorkerFromExistExpire(minId, property.getGroup(), uidKey, processId, ip,
                 property.getWorkerExpireInterval()));
         if (pair.getKey()) {
             workerNode = pair.getValue();
             return true;
         }
         return false;
+    }
+
+    /**
+     * do apply worker
+     *
+     * @param selfId selfId
+     * @param group group
+     * @param expireInterval worker expire interval
+     * @return key: exist flag, value: work node
+     */
+    public Pair<Boolean, WorkerNode> doApplyWorkerFromExistSelf(Long selfId, String group, long expireInterval) {
+
+        WorkerNode existedWorkerNode = workerNodeDAO.selectForUpdate(selfId);
+        if (existedWorkerNode == null) {
+            return Pair.of(false, null);
+        }
+
+        // work node expire or work node belong self
+        boolean canApply = existedWorkerNode.getLastExpireTime().compareTo(new Date()) < 0
+            || (Objects.equals(group, existedWorkerNode.getGroup()) && Objects.equals(ip, existedWorkerNode.getIp()));
+        if (canApply) {
+
+            // refresh work node
+            long workerId = existedWorkerNode.getWorkerId();
+            // do loop allocate workerId for workerNode
+            Pair<Boolean, WorkerNode> allocateResult = doLoopAllocateWorkerNode(group, expireInterval,
+                existedWorkerNode, workerId);
+            if (allocateResult != null) {
+                return allocateResult;
+            }
+        }
+        return new Pair<>(false, null);
+    }
+
+    private Pair<Boolean, WorkerNode> doLoopAllocateWorkerNode(String group,
+        long expireInterval, WorkerNode existedWorkerNode, long workerId) {
+        // 超出范围
+        if (workerId < property.getMinWorkerId() || workerId >= property.getMaxWorkerId()) {
+            workerId = property.getMinWorkerId();
+        }
+
+        for (long i = property.getMinWorkerId(); i < property.getMaxWorkerId(); i++) {
+            try {
+                if (workerId >= property.getMaxWorkerId()) {
+                    long actualWorkerId = workerId - property.getMaxWorkerId() + property.getMinWorkerId();
+                    existedWorkerNode.setWorkerId((int) actualWorkerId);
+                } else {
+                    existedWorkerNode.setWorkerId((int) workerId);
+                }
+                WorkerNode node = workerNodeDAO
+                    .refreshWorkNode(group, uidKey, processId, ip, expireInterval, existedWorkerNode);
+                return Pair.of(true, node);
+            } catch (Exception ex) {
+                log.warn("[DatabaseWorkerIdAssigner#doApplyWorkerFromExistSelf] refresh-error!", ex);
+                workerId++;
+            }
+        }
+        return null;
     }
 
     private boolean doApplyWorkerExtendPre() {
@@ -270,14 +332,47 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
         }
         // tx
         Pair<Boolean, WorkerNode> nodePair = transactionSupport.call(() ->
-            workerNodeDAO.doApplyWorkerFromExistSelf(selfNode.getId(), property.getGroup(), uidKey, processId, ip,
-                property.getWorkerExpireInterval()));
+            doApplyWorkerFromExistSelf(selfNode.getId(), property.getGroup(), property.getWorkerExpireInterval()));
         if (nodePair.getKey()) {
             workerNode = nodePair.getValue();
             return true;
         }
         return false;
     }
+
+    /**
+     * do apply worker
+     *
+     * @param minId minId
+     * @param group group
+     * @param uidKey uidKey
+     * @param processId process
+     * @param ip local ip
+     * @param expireInterval worker expire interval
+     * @return key: exist flag, value: work node
+     */
+    public Pair<Boolean, WorkerNode> doApplyWorkerFromExistExpire(Long minId, String group, String uidKey,
+        String processId, String ip, long expireInterval) {
+
+        WorkerNode existedWorkerNode = workerNodeDAO.selectForUpdate(minId);
+
+        if (existedWorkerNode == null) {
+            return Pair.of(false, null);
+        }
+
+        if (existedWorkerNode.getLastExpireTime().compareTo(new Date()) < 0) {
+
+            // do loop allocate workerId for workerNode
+            long workerId = existedWorkerNode.getWorkerId();
+            Pair<Boolean, WorkerNode> allocateResult = doLoopAllocateWorkerNode(group, expireInterval,
+                existedWorkerNode, workerId);
+            if (allocateResult != null) {
+                return allocateResult;
+            }
+        }
+        return new Pair<>(false, null);
+    }
+
 
     /**
      * get current instance process Id

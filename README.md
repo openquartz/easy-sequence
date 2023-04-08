@@ -22,10 +22,17 @@ easysequence.uid.snowflake.worker-id.default-val=0
 easysequence.uid.snowflake.default-group=default
 ```
 
-雪花算法目前支持两种算法实现。 1、标准版本实现;2、百度的 [UidGenerator](https://github.com/baidu/uid-generator) 实现
+雪花算法目前支持两种算法实现。
 
-相较于标准版本的实现CacheUidGenerator 性能更高。 具体的选择可以自己根据实际场景进行切换选择。用户可以实现一键配置`easysequence.uid.snowflake.type`自定义切换。
+1、**标准版本**;
+
+2、**Cache模式** 采用百度的 [UidGenerator](https://github.com/baidu/uid-generator) 实现
+
+> 相较于标准版本的实现CacheUidGenerator 性能更高。 具体的选择可以自己根据实际场景进行切换选择。用户可以实现一键配置`easysequence.uid.snowflake.type`自定义切换。
 `default`: 表示标准版本;`cache`: 表示百度的CacheUidGenerator实现。
+
+- 1、**标准模式** 使用dataCenterId+workerId 模式构成。所以最大workerId范围在[0,32)。用户也可在这个范围内进行缩小
+- 2、**Cache模式** 的workerId 使用 workerId模式构成。workerId最大范围在[0,1024)
 
 目前雪花算法的`workerId` 支持三种分配方式：**随机分配**、**Zookeeper分配**、**DB分配**。
 
@@ -49,6 +56,8 @@ easysequence.uid.snowflake.zookeeper.worker-pid-home=/data/pids/
 #### DB 分配(推荐)
 
 支持使用Jdbc等的关系型数据库。
+
+DB分配实现基于LOOP模式的下的分配。以当前机器IP下优先准则,其次依次LOOP进行分配workerId
 
 需要设置`easysequence.uid.snowflake.worker-assigner-type=db`
 配置
