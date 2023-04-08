@@ -140,7 +140,7 @@ CREATE TABLE `es_snowflake_worker_node`
 
 ### LeafID
 
-基于`Meituan`的LeafId的实现。可是自动装配。更好的集成到项目中。默认不开启。 如需开启可以启用配置
+基于`Meituan`的 [`LeafId`](https://github.com/Meituan-Dianping/Leaf) 的实现。可是自动装配。更好的集成到项目中。默认不开启。 如需开启可以启用配置
 
 ```properties
 easysequence.uid.leaf.enabled=true
