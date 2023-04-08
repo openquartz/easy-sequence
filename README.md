@@ -32,8 +32,8 @@ easysequence.uid.snowflake.default-group=default
 >
 > `default`: 表示标准版本;`cache`: 表示百度的CacheUidGenerator实现。
 
-- 1、**标准模式** 使用dataCenterId+workerId 模式构成。所以最大workerId范围在[0,32)。用户也可在这个范围内进行缩小
-- 2、**Cache模式** 的workerId 使用 workerId模式构成。workerId最大范围在[0,1024)
+- 1、**标准模式** 使用`dataCenterId+workerId` 模式构成。所以最大`workerId`范围在[0,32)。用户也可在这个范围内进行缩小
+- 2、**Cache模式** 的`workerId` 使用 workerId模式构成。`workerId`最大范围在[0,1024)
 
 目前雪花算法的`workerId` 支持三种分配方式：**随机分配**、**Zookeeper分配**、**DB分配**。
 
