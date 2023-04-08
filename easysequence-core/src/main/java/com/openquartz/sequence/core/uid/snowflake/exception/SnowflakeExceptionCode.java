@@ -18,6 +18,8 @@ public enum SnowflakeExceptionCode implements EasySequenceErrorCode {
     WORKER_ID_OVER_FLOW_ERROR("06", "WorkerId over flow error!"),
     DATA_CENTER_ID_OVER_FLOW_ERROR("07", "DataCenterId over flow error!"),
     SNOWFLAKE_ID_GENERATE_ERROR("08", "SnowflakeId generate error!"),
+    SNOWFLAKE_DEFAULT_WORKER_ID_OVER_ERROR("09", "Snowflake default workerId must in range:[{0},{1})!", true),
+    SNOWFLAKE_WORKER_ID_OVER_ERROR("10", "Snowflake workerId must in range:[{0},{1})!", true),
     ;
 
     private final String errorCode;

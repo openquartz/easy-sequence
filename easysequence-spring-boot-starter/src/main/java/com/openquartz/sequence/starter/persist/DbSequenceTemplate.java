@@ -11,6 +11,9 @@ import lombok.Data;
 @Data
 public class DbSequenceTemplate implements SequenceTemplate {
 
+    /**
+     * ID
+     */
     private Long id;
 
     /**

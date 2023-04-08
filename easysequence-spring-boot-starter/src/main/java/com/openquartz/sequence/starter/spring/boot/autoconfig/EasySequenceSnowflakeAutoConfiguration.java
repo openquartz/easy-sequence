@@ -1,10 +1,17 @@
 package com.openquartz.sequence.starter.spring.boot.autoconfig;
 
+import static com.openquartz.sequence.core.uid.snowflake.exception.SnowflakeExceptionCode.SNOWFLAKE_DEFAULT_WORKER_ID_OVER_ERROR;
+import static com.openquartz.sequence.core.uid.snowflake.exception.SnowflakeExceptionCode.SNOWFLAKE_WORKER_ID_OVER_ERROR;
+
 import com.openquartz.sequence.core.uid.snowflake.SnowflakeIdProvider;
 import com.openquartz.sequence.core.uid.snowflake.cache.CacheSnowflakeIdProvider;
 import com.openquartz.sequence.core.uid.snowflake.worker.WorkerIdAssigner;
+import com.openquartz.sequence.generator.common.exception.Asserts;
 import com.openquartz.sequence.starter.persist.WorkerNodeDAO;
 import com.openquartz.sequence.starter.spring.boot.autoconfig.property.EasySequenceSnowflakeProperties;
+import com.openquartz.sequence.starter.spring.boot.autoconfig.property.EasySequenceSnowflakeProperties.WorkerId;
+import com.openquartz.sequence.starter.spring.boot.autoconfig.property.SnowflakeType;
+import com.openquartz.sequence.starter.spring.boot.autoconfig.property.WorkerIdConstants;
 import com.openquartz.sequence.starter.transaction.TransactionSupport;
 import com.openquartz.sequence.starter.worker.WorkerIdAssignerProperty;
 import com.openquartz.sequence.starter.worker.DatabaseWorkerIdAssigner;
@@ -48,6 +55,28 @@ public class EasySequenceSnowflakeAutoConfiguration {
     @Bean
     public WorkerIdAssignerProperty workerIdAssignerProperty(
         EasySequenceSnowflakeProperties easySequenceSnowflakeProperties) {
+
+        Asserts
+            .isTrue(easySequenceSnowflakeProperties.getWorkerId().getDefaultVal() >=
+                    easySequenceSnowflakeProperties.getWorkerId().getMin(),
+                SNOWFLAKE_DEFAULT_WORKER_ID_OVER_ERROR,
+                easySequenceSnowflakeProperties.getWorkerId().getMin(),
+                easySequenceSnowflakeProperties.getWorkerId().getMax());
+        Asserts
+            .isTrue(easySequenceSnowflakeProperties.getWorkerId().getDefaultVal() <
+                    easySequenceSnowflakeProperties.getWorkerId().getMax(),
+                SNOWFLAKE_DEFAULT_WORKER_ID_OVER_ERROR,
+                easySequenceSnowflakeProperties.getWorkerId().getMin(),
+                easySequenceSnowflakeProperties.getWorkerId().getMax());
+
+        if (easySequenceSnowflakeProperties.getType() == SnowflakeType.DEFAULT) {
+            checkWorkerIdProperty(easySequenceSnowflakeProperties.getWorkerId(),
+                WorkerIdConstants.DEFAULT_MAX_WORKER_ID);
+        } else {
+            checkWorkerIdProperty(easySequenceSnowflakeProperties.getWorkerId(),
+                WorkerIdConstants.CACHE_MAX_WORKER_ID);
+        }
+
         WorkerIdAssignerProperty property = new WorkerIdAssignerProperty();
         property.setGroup(easySequenceSnowflakeProperties.getDefaultGroup());
         property.setWorkerHeartbeatInterval(easySequenceSnowflakeProperties.getDb().getWorkerHeartbeatInterval());
@@ -55,6 +84,13 @@ public class EasySequenceSnowflakeAutoConfiguration {
         property.setMinWorkerId(easySequenceSnowflakeProperties.getWorkerId().getMin());
         property.setMaxWorkerId(easySequenceSnowflakeProperties.getWorkerId().getMax());
         return property;
+    }
+
+    private void checkWorkerIdProperty(WorkerId workerId, Integer maxId) {
+        Asserts.isTrue(workerId.getMin() >= WorkerIdConstants.MIN_WORKER_ID, SNOWFLAKE_WORKER_ID_OVER_ERROR,
+            WorkerIdConstants.MIN_WORKER_ID, maxId);
+        Asserts.isTrue(workerId.getMax() < maxId, SNOWFLAKE_WORKER_ID_OVER_ERROR,
+            WorkerIdConstants.MIN_WORKER_ID, maxId);
     }
 
     @Bean
