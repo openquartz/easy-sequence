@@ -89,13 +89,15 @@ easysequence.uid.snowflake.default-group=default
 
 目前雪花算法的`workerId` 支持三种分配方式：**随机分配**、**Zookeeper分配**、**DB分配**。
 
-#### 随机分配
+#### WorkerId-机器ID
+
+##### 随机分配
 
 设置配置：`easysequence.uid.snowflake.worker-assigner-type=random`
 
 不支持不重复
 
-#### Zookeeper分配
+##### Zookeeper分配
 
 需要设置配置 `easysequence.uid.snowflake.worker-assigner-type=zookeeper` 同时 需要依赖`Zookeeper`组件.需要引入相关依赖
 
@@ -106,7 +108,7 @@ easysequence.uid.snowflake.zookeeper.worker-pid-port=-1
 easysequence.uid.snowflake.zookeeper.worker-pid-home=/data/pids/
 ```
 
-#### DB 分配(推荐)
+##### DB 分配(推荐)
 
 支持使用Jdbc等的关系型数据库。
 
