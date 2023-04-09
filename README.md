@@ -89,13 +89,15 @@ easysequence.uid.snowflake.default-group=default
 
 目前雪花算法的`workerId` 支持三种分配方式：**随机分配**、**Zookeeper分配**、**DB分配**。
 
-#### 随机分配
+#### WorkerId-机器ID
+
+##### 随机分配
 
 设置配置：`easysequence.uid.snowflake.worker-assigner-type=random`
 
 不支持不重复
 
-#### Zookeeper分配
+##### Zookeeper分配
 
 需要设置配置 `easysequence.uid.snowflake.worker-assigner-type=zookeeper` 同时 需要依赖`Zookeeper`组件.需要引入相关依赖
 
@@ -106,7 +108,7 @@ easysequence.uid.snowflake.zookeeper.worker-pid-port=-1
 easysequence.uid.snowflake.zookeeper.worker-pid-home=/data/pids/
 ```
 
-#### DB 分配(推荐)
+##### DB 分配(推荐)
 
 支持使用Jdbc等的关系型数据库。
 
@@ -289,6 +291,11 @@ easysequence:
 #### 3、启用序列池
 
 由于性能考虑不会每次都从DB中加载，做了池化缓存一定的序列。可以配置启用或关闭。 针对不同的序列的注册码的缓存的数量可以自定义配置。也可以直接配置对应的默认配置
+
+针对不用的序列号可以设置不同的 `池化缓存数`(pre-count) 与 加载的`低水位数`(water-level-threshold)。\
+配置格式为：\
+`easysequence.sequence.pool.custom-property.{seq-code}.pre-count`
+`easysequence.sequence.pool.custom-property.{seq-code}.water-level-threshold`
 
 ```properties
 ###sequence-pool
