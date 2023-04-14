@@ -11,6 +11,7 @@ import com.openquartz.sequence.core.expr.persist.model.SequencePoolProperties.Se
 import com.openquartz.sequence.core.persist.mapper.SequenceAssignRegisterMapper;
 import com.openquartz.sequence.core.persist.mapper.SequenceNextAssignMapper;
 import com.openquartz.sequence.core.persist.mapper.SequenceTemplateMapper;
+import com.openquartz.sequence.generator.common.transaction.TransactionSupport;
 import com.openquartz.sequence.generator.common.utils.SpringContextUtil;
 import com.openquartz.sequence.generator.common.utils.StringUtils;
 import com.openquartz.sequence.starter.persist.SequenceAssignRegisterMapperImpl;
@@ -19,7 +20,6 @@ import com.openquartz.sequence.starter.persist.SequenceTemplateMapperImpl;
 import com.openquartz.sequence.starter.spring.boot.autoconfig.property.EasySequenceDatasourceProperties;
 import com.openquartz.sequence.starter.spring.boot.autoconfig.property.EasySequencePoolProperties;
 import com.openquartz.sequence.starter.spring.boot.autoconfig.property.EasySequencePoolProperties.EasySequencePoolProperty;
-import com.openquartz.sequence.starter.transaction.TransactionSupport;
 import com.openquartz.sequence.starter.transaction.TransactionSupportImpl;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,6 +40,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
@@ -71,8 +72,9 @@ public class EasySequenceCreatorAutoConfiguration {
     }
 
     @Bean
-    public TransactionSupport transactionSupport(TransactionTemplate transactionTemplate) {
-        return new TransactionSupportImpl(transactionTemplate);
+    public TransactionSupport transactionSupport(PlatformTransactionManager platformTransactionManager) {
+        TransactionTemplate template = new TransactionTemplate(platformTransactionManager);
+        return new TransactionSupportImpl(template);
     }
 
     private void buildDataSourceProperties(DataSource dataSource, Map<Object, Object> dsMap) {
@@ -152,7 +154,8 @@ public class EasySequenceCreatorAutoConfiguration {
     @ConditionalOnMissingBean(SequenceIncrService.class)
     public SequenceIncrService sequenceIncrService(SequenceNextAssignMapper sequenceNextAssignMapper,
         SequenceAssignRegisterMapper sequenceAssignRegisterMapper,
-        EasySequencePoolProperties easySequencePoolProperties) {
+        EasySequencePoolProperties easySequencePoolProperties,
+        TransactionSupport transactionSupport) {
 
         SequencePoolProperties sequencePoolProperties = new SequencePoolProperties();
         sequencePoolProperties.setEnable(easySequencePoolProperties.isEnable());
@@ -167,8 +170,10 @@ public class EasySequenceCreatorAutoConfiguration {
         sequencePoolProperties.setRegisterCode2Property(registerCode2Property);
         sequencePoolProperties.setDefaultProperty(convert(easySequencePoolProperties.getDefaultProperty()));
 
-        return new SequenceIncrServiceImpl(sequenceNextAssignMapper, sequenceAssignRegisterMapper,
-            sequencePoolProperties);
+        return new SequenceIncrServiceImpl(sequenceNextAssignMapper,
+            sequenceAssignRegisterMapper,
+            sequencePoolProperties,
+            transactionSupport);
     }
 
     private SequencePoolProperty convert(EasySequencePoolProperty property) {

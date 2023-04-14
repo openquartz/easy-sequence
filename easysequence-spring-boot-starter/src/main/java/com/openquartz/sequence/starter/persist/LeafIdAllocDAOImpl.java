@@ -2,8 +2,8 @@ package com.openquartz.sequence.starter.persist;
 
 import com.openquartz.sequence.core.uid.leaf.LeafAlloc;
 import com.openquartz.sequence.core.uid.leaf.LeafIdAllocDAO;
+import com.openquartz.sequence.generator.common.transaction.TransactionSupport;
 import com.openquartz.sequence.generator.common.utils.CollectionUtils;
-import com.openquartz.sequence.starter.transaction.TransactionSupport;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -40,7 +40,7 @@ public class LeafIdAllocDAOImpl implements LeafIdAllocDAO {
 
     @Override
     public LeafAlloc updateMaxIdAndGetLeafAlloc(String tag) {
-        return transactionSupport.call(() -> {
+        return transactionSupport.execute(() -> {
             jdbcTemplate.update(UPDATE_MAX_ID_SQL, tag);
             List<LeafAlloc> allocList = jdbcTemplate.query(SELECT_LEAF_ALLOC_TAG_SQL, new LeafAllocRow(), tag);
             return CollectionUtils.isNotEmpty(allocList) ? allocList.get(0) : null;
@@ -49,7 +49,7 @@ public class LeafIdAllocDAOImpl implements LeafIdAllocDAO {
 
     @Override
     public LeafAlloc updateMaxIdByCustomStepAndGetLeafAlloc(LeafAlloc leafAlloc) {
-        return transactionSupport.call(() -> {
+        return transactionSupport.execute(() -> {
             jdbcTemplate.update(UPDATE_MAX_ID_CUSTOM_STEP_SQL, leafAlloc.getStep(), leafAlloc.getKey());
             List<LeafAlloc> allocList = jdbcTemplate
                 .query(SELECT_LEAF_ALLOC_TAG_SQL, new LeafAllocRow(), leafAlloc.getKey());

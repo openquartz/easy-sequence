@@ -17,6 +17,7 @@ import com.openquartz.sequence.generator.common.concurrent.TraceThreadPoolExecut
 import com.openquartz.sequence.generator.common.constant.Constants;
 import com.openquartz.sequence.generator.common.exception.Asserts;
 import com.openquartz.sequence.generator.common.exception.DataErrorCode;
+import com.openquartz.sequence.generator.common.transaction.TransactionSupport;
 import com.openquartz.sequence.generator.common.utils.DateUtils;
 import com.openquartz.sequence.generator.common.utils.RandomUtils;
 import java.time.LocalDate;
@@ -29,9 +30,6 @@ import java.util.concurrent.ThreadPoolExecutor.DiscardPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 序列自增服务
@@ -47,16 +45,19 @@ public class SequenceIncrServiceImpl implements SequenceIncrService {
     private final ThreadPoolExecutor executorService;
     private final Map<String, AtomicInteger> refreshStateMap = new ConcurrentHashMap<>();
     private final Map<String, SequencePool> sequencePoolMap = new ConcurrentHashMap<>();
+    private final TransactionSupport transactionSupport;
 
     public SequenceIncrServiceImpl(SequenceNextAssignMapper sequenceNextAssignMapper,
         SequenceAssignRegisterMapper sequenceAssignRegisterMapper,
-        SequencePoolProperties sequencePoolProperties) {
+        SequencePoolProperties sequencePoolProperties,
+        TransactionSupport transactionSupport) {
 
         this.sequenceNextAssignMapper = sequenceNextAssignMapper;
         this.sequenceAssignRegisterMapper = sequenceAssignRegisterMapper;
         this.sequencePoolProperties = sequencePoolProperties;
         this.executorService = new TraceThreadPoolExecutor(2, 5, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100),
             new DiscardPolicy());
+        this.transactionSupport = transactionSupport;
         executorService.allowCoreThreadTimeOut(true);
     }
 
@@ -68,15 +69,14 @@ public class SequenceIncrServiceImpl implements SequenceIncrService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
     public Long getAndIncrement(String registerCode) {
-        return getAndIncrementBy(registerCode, AssignExtParam.EMPTY_PARAM, 1);
+        return transactionSupport.executeInNewTransaction(
+            () -> getAndIncrementBy(registerCode, AssignExtParam.EMPTY_PARAM, 1));
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
     public Long getAndIncrement(String registerCode, AssignExtParam param) {
-        return getAndIncrementBy(registerCode, param, 1);
+        return transactionSupport.execute(() -> getAndIncrementBy(registerCode, param, 1));
     }
 
     private SequenceBucket doGetAndIncrementBy(String registerCode, AssignExtParam param, Long step) {
@@ -93,7 +93,7 @@ public class SequenceIncrServiceImpl implements SequenceIncrService {
         }
         boolean success = false;
         SequenceBucket sequenceBucket = null;
-        // try get more count
+        // try to get more count
         for (int i = 0; i < sequencePoolProperties.getMaxTryCount(); i++) {
             int affectRowNum = sequenceNextAssignMapper.incrementBy(key, step, assigner.getNextValue());
             if (affectRowNum >= 1) {
@@ -256,14 +256,12 @@ public class SequenceIncrServiceImpl implements SequenceIncrService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
     public Long getAndIncrementBy(String registerCode, AssignExtParam param, long step) {
-        return doGeneralGetIncr(registerCode, param, step);
+        return transactionSupport.executeInNewTransaction(() -> doGeneralGetIncr(registerCode, param, step));
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public SequenceNextAssign getNewestNumberAssign(String key) {
-        return sequenceNextAssignMapper.selectByKey(key);
+        return transactionSupport.executeInNewTransaction(() -> sequenceNextAssignMapper.selectByKey(key));
     }
 
     private String generateKey(String registerCode, AssignExtParam param) {

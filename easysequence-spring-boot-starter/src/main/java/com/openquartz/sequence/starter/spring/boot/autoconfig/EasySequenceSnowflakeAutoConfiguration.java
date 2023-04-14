@@ -7,12 +7,12 @@ import com.openquartz.sequence.core.uid.snowflake.SnowflakeIdProvider;
 import com.openquartz.sequence.core.uid.snowflake.cache.CacheSnowflakeIdProvider;
 import com.openquartz.sequence.core.uid.snowflake.worker.WorkerIdAssigner;
 import com.openquartz.sequence.generator.common.exception.Asserts;
+import com.openquartz.sequence.generator.common.transaction.TransactionSupport;
 import com.openquartz.sequence.starter.persist.WorkerNodeDAO;
 import com.openquartz.sequence.starter.spring.boot.autoconfig.property.EasySequenceSnowflakeProperties;
 import com.openquartz.sequence.starter.spring.boot.autoconfig.property.EasySequenceSnowflakeProperties.WorkerId;
 import com.openquartz.sequence.starter.spring.boot.autoconfig.property.SnowflakeType;
 import com.openquartz.sequence.starter.spring.boot.autoconfig.property.WorkerIdConstants;
-import com.openquartz.sequence.starter.transaction.TransactionSupport;
 import com.openquartz.sequence.starter.worker.WorkerIdAssignerProperty;
 import com.openquartz.sequence.starter.worker.DatabaseWorkerIdAssigner;
 import com.openquartz.sequence.starter.worker.RandomWorkerIdAssigner;
@@ -97,7 +97,8 @@ public class EasySequenceSnowflakeAutoConfiguration {
     @ConditionalOnMissingBean(WorkerIdAssigner.class)
     @ConditionalOnProperty(prefix = EasySequenceSnowflakeProperties.PREFIX, value = "worker-assigner-type", havingValue = "db")
     public WorkerIdAssigner dbWorIdAssigner(WorkerIdAssignerProperty workerIdAssignerProperty,
-        WorkerNodeDAO workerNodeDAO, TransactionSupport transactionSupport) {
+        WorkerNodeDAO workerNodeDAO,
+        TransactionSupport transactionSupport) {
         return new DatabaseWorkerIdAssigner(workerIdAssignerProperty, workerNodeDAO, transactionSupport, port);
     }
 

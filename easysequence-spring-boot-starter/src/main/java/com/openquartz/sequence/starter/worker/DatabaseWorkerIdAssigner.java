@@ -7,11 +7,11 @@ import com.openquartz.sequence.core.uid.snowflake.worker.WorkerIdAssigner;
 import com.openquartz.sequence.core.uid.snowflake.worker.WorkerNode;
 import com.openquartz.sequence.generator.common.exception.Asserts;
 import com.openquartz.sequence.generator.common.exception.EasySequenceException;
+import com.openquartz.sequence.generator.common.transaction.TransactionSupport;
 import com.openquartz.sequence.generator.common.utils.NetUtils;
 import com.openquartz.sequence.generator.common.utils.Pair;
 import com.openquartz.sequence.generator.common.utils.StringUtils;
 import com.openquartz.sequence.starter.persist.WorkerNodeDAO;
-import com.openquartz.sequence.starter.transaction.TransactionSupport;
 import java.lang.management.ManagementFactory;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -258,7 +258,7 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
 
         // tx
         Pair<Boolean, WorkerNode> pair = transactionSupport
-            .call(() -> doApplyWorkerFromExistExpire(minId, property.getGroup(), uidKey, processId, ip,
+            .execute(() -> doApplyWorkerFromExistExpire(minId, property.getGroup(), uidKey, processId, ip,
                 property.getWorkerExpireInterval()));
         if (pair.getKey()) {
             workerNode = pair.getValue();
@@ -331,7 +331,7 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
             return false;
         }
         // tx
-        Pair<Boolean, WorkerNode> nodePair = transactionSupport.call(() ->
+        Pair<Boolean, WorkerNode> nodePair = transactionSupport.execute(() ->
             doApplyWorkerFromExistSelf(selfNode.getId(), property.getGroup(), property.getWorkerExpireInterval()));
         if (nodePair.getKey()) {
             workerNode = nodePair.getValue();

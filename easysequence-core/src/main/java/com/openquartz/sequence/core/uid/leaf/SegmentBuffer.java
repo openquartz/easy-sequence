@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class SegmentBuffer {
 
     private String key;
-    private Segment[] segments; //双buffer
+    private final Segment[] segments; //双buffer
     private volatile int currentPos; //当前的使用的segment的index
     private volatile boolean nextReady; //下一个segment是否处于可切换状态
     private volatile boolean initOk; //是否初始化完成
@@ -114,17 +114,15 @@ public class SegmentBuffer {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("SegmentBuffer{");
-        sb.append("key='").append(key).append('\'');
-        sb.append(", segments=").append(Arrays.toString(segments));
-        sb.append(", currentPos=").append(currentPos);
-        sb.append(", nextReady=").append(nextReady);
-        sb.append(", initOk=").append(initOk);
-        sb.append(", threadRunning=").append(threadRunning);
-        sb.append(", step=").append(step);
-        sb.append(", minStep=").append(minStep);
-        sb.append(", updateTimestamp=").append(updateTimestamp);
-        sb.append('}');
-        return sb.toString();
+        return "SegmentBuffer{" + "key='" + key + '\''
+            + ", segments=" + Arrays.toString(segments)
+            + ", currentPos=" + currentPos
+            + ", nextReady=" + nextReady
+            + ", initOk=" + initOk
+            + ", threadRunning=" + threadRunning
+            + ", step=" + step
+            + ", minStep=" + minStep
+            + ", updateTimestamp=" + updateTimestamp
+            + '}';
     }
 }

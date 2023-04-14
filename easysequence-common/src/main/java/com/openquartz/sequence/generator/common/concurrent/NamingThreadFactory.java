@@ -15,6 +15,8 @@
  */
 package com.openquartz.sequence.generator.common.concurrent;
 
+import com.openquartz.sequence.generator.common.utils.ClassUtils;
+import com.openquartz.sequence.generator.common.utils.StringUtils;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
@@ -22,12 +24,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * Named thread in ThreadFactory. If there is no specified name for thread, it
- * will auto detect using the invoker classname instead.
+ * will auto-detect using the invoker classname instead.
  *
  * @author svnee
  */
@@ -79,10 +79,8 @@ public class NamingThreadFactory implements ThreadFactory {
         Thread thread = new Thread(r);
         thread.setDaemon(this.daemon);
 
-        // If there is no specified name for thread, it will auto detect using the invoker classname instead.
-        // Notice that auto detect may cause some performance overhead
         String prefix = this.name;
-        if (StringUtils.isEmpty(prefix)) {
+        if (StringUtils.isBlank(prefix)) {
             prefix = getInvoker(2);
         }
         thread.setName(prefix + "-" + getSequence(prefix));
