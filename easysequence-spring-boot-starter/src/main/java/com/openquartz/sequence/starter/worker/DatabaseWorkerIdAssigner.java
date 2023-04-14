@@ -10,6 +10,7 @@ import com.openquartz.sequence.generator.common.exception.EasySequenceException;
 import com.openquartz.sequence.generator.common.transaction.TransactionSupport;
 import com.openquartz.sequence.generator.common.utils.NetUtils;
 import com.openquartz.sequence.generator.common.utils.Pair;
+import com.openquartz.sequence.generator.common.utils.RandomUtils;
 import com.openquartz.sequence.generator.common.utils.StringUtils;
 import com.openquartz.sequence.starter.persist.WorkerNodeDAO;
 import java.lang.management.ManagementFactory;
@@ -115,7 +116,7 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
         });
 
         // 延迟10秒上报，每5秒上报一次数据
-        scheduler.scheduleWithFixedDelay(this::refreshNodeInfo, 10000, property.getWorkerHeartbeatInterval(),
+        scheduler.scheduleWithFixedDelay(this::refreshNodeInfo, RandomUtils.nextInt(1,1000) * 100L, property.getWorkerHeartbeatInterval(),
             TimeUnit.MILLISECONDS);
     }
 
