@@ -294,7 +294,7 @@ easysequence:
 
 针对不用的序列号可以设置不同的 `池化缓存数`(pre-count) 与 加载的`低水位数`(water-level-threshold)。\
 配置格式为：\
-`easysequence.sequence.pool.custom-property.{seq-code}.pre-count`、
+`easysequence.sequence.pool.custom-property.{seq-code}.pre-count`、\
 `easysequence.sequence.pool.custom-property.{seq-code}.water-level-threshold`
 
 ```properties
