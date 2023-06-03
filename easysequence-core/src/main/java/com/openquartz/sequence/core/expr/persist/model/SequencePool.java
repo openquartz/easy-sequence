@@ -51,6 +51,7 @@ public class SequencePool {
         ensureFirstElementAvailable();
         SequenceBucket sequenceBucket = sequenceBuckets.peek();
         Asserts.notNull(sequenceBucket, SequenceGenerateExceptionCode.SEQUENCE_BUCKET_NOT_EXIST_ERROR, poolName);
+        assert sequenceBucket != null;
         return sequenceBucket.getAndIncrement();
     }
 

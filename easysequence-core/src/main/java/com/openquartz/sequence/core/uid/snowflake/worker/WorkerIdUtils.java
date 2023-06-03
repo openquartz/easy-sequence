@@ -4,12 +4,14 @@ import com.openquartz.sequence.generator.common.utils.NetUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * WorkerIdUtils
  *
  * @author svnee
  */
+@Slf4j
 public final class WorkerIdUtils {
 
     private WorkerIdUtils() {
@@ -64,7 +66,8 @@ public final class WorkerIdUtils {
                 return Long.valueOf(pid.substring(pid.lastIndexOf(WORKER_SPLIT) + 1));
             }
         } else {
-            home.mkdirs();
+            boolean mkdirs = home.mkdirs();
+            log.info("[WorkUtils#getPid] mkdir dir result:{}", mkdirs);
         }
         return null;
     }
@@ -95,8 +98,9 @@ public final class WorkerIdUtils {
     public static void writePidFile(String name) {
         File pidFile = new File(name);
         try {
-            pidFile.createNewFile();
-        } catch (IOException ignoredException) {
+            boolean newFile = pidFile.createNewFile();
+            log.info("Writing pid file,result:{}", newFile);
+        } catch (IOException ignored) {
         }
     }
 }

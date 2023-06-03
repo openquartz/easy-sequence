@@ -36,29 +36,14 @@ public class SnowflakeIdWorker {
     /** 支持的最大机器id，结果是31 (这个移位算法可以很快的计算出几位二进制数所能表示的最大十进制数) */
     public final long maxWorkerId = ~(-1L << workerIdBits);
 
-    /** 支持的最大数据标识id，结果是31 */
-    private final long maxDatacenterId = ~(-1L << datacenterIdBits);
-
     /** 序列在id中占的位数 (表示只允许sequenceId的范围为：0-4095) */
     private final long sequenceBits = 12;
 
-    /** 机器ID向左移12位 */
-    private final long workerIdShift = sequenceBits;
-
-    /** 数据标识id向左移17位(12+5) */
-    private final long datacenterIdShift = sequenceBits + workerIdBits;
-
-    /** 时间截向左移22位(5+5+12) */
-    private final long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
-
-    /** 生成序列的掩码，(防止溢出:位与运算保证计算的结果范围始终是 0-4095，0b111111111111=0xfff=4095) */
-    private final long sequenceMask = ~(-1L << sequenceBits);
-
     /** 工作机器ID(0~31) */
-    private long workerId;
+    private final long workerId;
 
     /** 数据中心ID(0~31) */
-    private long datacenterId;
+    private final long datacenterId;
 
     /** 毫秒内序列(0~4095) */
     private long sequence = 0L;
@@ -85,6 +70,8 @@ public class SnowflakeIdWorker {
         if (workerId > maxWorkerId || workerId < 0) {
             throw new EasySequenceException(SnowflakeExceptionCode.WORKER_ID_OVER_FLOW_ERROR);
         }
+        // 支持的最大数据标识id，结果是31
+        long maxDatacenterId = ~(-1L << datacenterIdBits);
         if (datacenterId > maxDatacenterId || datacenterId < 0) {
             throw new EasySequenceException(SnowflakeExceptionCode.DATA_CENTER_ID_OVER_FLOW_ERROR);
         }
@@ -125,6 +112,8 @@ public class SnowflakeIdWorker {
         // 解决跨毫秒生成ID序列号始终为偶数的缺陷:如果是同一时间生成的，则进行毫秒内序列
         if (lastTimestamp == timestamp) {
             // 通过位与运算保证计算的结果范围始终是 0-4095
+            // 生成序列的掩码，(防止溢出:位与运算保证计算的结果范围始终是 0-4095，0b111111111111=0xfff=4095)
+            long sequenceMask = ~(-1L << sequenceBits);
             sequence = (sequence + 1) & sequenceMask;
             // 毫秒内序列溢出
             if (sequence == 0) {
@@ -144,8 +133,13 @@ public class SnowflakeIdWorker {
          * 2.然后对每个左移后的值(la、lb、lc、sequence)做位或运算，是为了把各个短的数据合并起来，合并成一个二进制数
          * 3.最后转换成10进制，就是最终生成的id(64位的ID)
          */
+        // 机器ID向左移12位
+        // 数据标识id向左移17位(12+5)
+        long datacenterIdShift = sequenceBits + workerIdBits;
+        // 时间截向左移22位(5+5+12)
+        long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits;
         return ((timestamp - twepoch) << timestampLeftShift) | (datacenterId << datacenterIdShift) | (workerId
-            << workerIdShift) | sequence;
+            << sequenceBits) | sequence;
     }
 
     public String parseUID(Long uid) {
