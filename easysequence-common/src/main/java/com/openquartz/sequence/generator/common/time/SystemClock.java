@@ -55,9 +55,9 @@ public class SystemClock {
     }
 
     private void scheduleClockUpdating() {
-        ScheduledExecutorService scheduledpool = new ScheduledThreadPoolExecutor(1,
+        ScheduledExecutorService scheduledPool = new ScheduledThreadPoolExecutor(1,
             new NamingThreadFactory(THREAD_CLOCK_NAME, true));
-        scheduledpool
+        scheduledPool
             .scheduleAtFixedRate(() -> now.set(System.currentTimeMillis()), period, period, TimeUnit.MILLISECONDS);
     }
 

@@ -4,6 +4,7 @@ import com.openquartz.sequence.core.expr.exception.LeafIdExceptionCode;
 import com.openquartz.sequence.core.uid.UidProvider;
 import com.openquartz.sequence.core.uid.leaf.property.LeafProperty;
 import com.openquartz.sequence.generator.common.bean.LifestyleBean;
+import com.openquartz.sequence.generator.common.concurrent.TraceThreadPoolExecutor;
 import com.openquartz.sequence.generator.common.exception.Asserts;
 import com.openquartz.sequence.generator.common.exception.EasySequenceException;
 import java.util.ArrayList;
@@ -16,7 +17,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
@@ -42,7 +42,7 @@ public class LeafIdGenerator implements UidProvider, LifestyleBean {
      */
     private static final long SEGMENT_DURATION = 15 * 60 * 1000L;
 
-    private final ExecutorService service = new ThreadPoolExecutor(5, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
+    private final ExecutorService service = new TraceThreadPoolExecutor(5, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS,
         new SynchronousQueue<>(), new UpdateThreadFactory());
     private volatile boolean initSuccess = false;
     private final Map<String, SegmentBuffer> cache = new ConcurrentHashMap<>();
@@ -141,7 +141,7 @@ public class LeafIdGenerator implements UidProvider, LifestyleBean {
         Asserts.isTrue(initSuccess, LeafIdExceptionCode.LEAF_ID_INIT_ERROR);
         Asserts.isTrue(cache.containsKey(key), LeafIdExceptionCode.LEAF_KEY_NOT_EXISTS_ERROR, key);
 
-        SegmentBuffer buffer = cache.get(key);
+        final SegmentBuffer buffer = cache.get(key);
         if (!buffer.isInitOk()) {
             synchronized (buffer) {
                 if (!buffer.isInitOk()) {
@@ -214,7 +214,7 @@ public class LeafIdGenerator implements UidProvider, LifestyleBean {
                             updateOk = true;
                             logger.info("update segment {} from db {}", buffer.getKey(), next);
                         } catch (Exception e) {
-                            logger.warn(buffer.getKey() + " updateSegmentFromDb exception", e);
+                            logger.warn("{} updateSegmentFromDb exception", buffer.getKey(), e);
                         } finally {
                             if (updateOk) {
                                 buffer.wLock().lock();
