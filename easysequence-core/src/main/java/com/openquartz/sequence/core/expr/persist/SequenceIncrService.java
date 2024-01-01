@@ -23,7 +23,6 @@ public interface SequenceIncrService extends LifestyleBean {
      * example:
      * 1.AssignExtParam param = AssignExtParam.create().set("c",100)
      * 2.getAndIncrement("RG1", param)
-     * 获取的是env:w:100的仓库自增编号
      *
      * @return incr number
      */

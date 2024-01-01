@@ -117,20 +117,11 @@ public final class NetUtils {
     }
 
     public static int getAvailablePort() {
-        ServerSocket ss = null;
-        try {
-            ss = new ServerSocket();
+        try (ServerSocket ss = new ServerSocket()) {
             ss.bind(null);
             return ss.getLocalPort();
         } catch (IOException e) {
             return getRandomPort();
-        } finally {
-            if (ss != null) {
-                try {
-                    ss.close();
-                } catch (IOException ignored) {
-                }
-            }
         }
     }
 
@@ -139,19 +130,10 @@ public final class NetUtils {
             return getAvailablePort();
         }
         for (int i = port; i < MAX_PORT; i++) {
-            ServerSocket ss = null;
-            try {
-                ss = new ServerSocket(i);
+            try (ServerSocket ss = new ServerSocket(i)) {
                 return i;
             } catch (IOException e) {
                 // continue
-            } finally {
-                if (ss != null) {
-                    try {
-                        ss.close();
-                    } catch (IOException ignored) {
-                    }
-                }
             }
         }
         return port;

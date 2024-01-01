@@ -76,7 +76,7 @@ public class SequenceIncrServiceImpl implements SequenceIncrService {
 
     @Override
     public Long getAndIncrement(String registerCode, AssignExtParam param) {
-        return transactionSupport.execute(() -> getAndIncrementBy(registerCode, param, 1));
+        return transactionSupport.executeInNewTransaction(() -> getAndIncrementBy(registerCode, param, 1));
     }
 
     private SequenceBucket doGetAndIncrementBy(String registerCode, AssignExtParam param, Long step) {

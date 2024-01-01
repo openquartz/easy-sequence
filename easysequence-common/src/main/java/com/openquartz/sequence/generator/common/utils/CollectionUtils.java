@@ -232,7 +232,7 @@ public final class CollectionUtils {
     public static <T> List<T> newArrayList(T... elements) {
         checkNotNull(elements);
         int capacity = computeArrayListCapacity(elements.length);
-        ArrayList<T> list = new ArrayList(capacity);
+        ArrayList<T> list = new ArrayList<>(capacity);
         Collections.addAll(list, elements);
         return list;
     }
