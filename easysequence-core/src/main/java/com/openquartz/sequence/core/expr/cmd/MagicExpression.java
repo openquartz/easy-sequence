@@ -95,10 +95,10 @@ public class MagicExpression {
             MagicExpression magicExpression = new MagicExpression();
             Environment environment = new Environment();
             environment.setExecutorFactory(new ExecutorFactory(new ExecutorRegistry()));
-            if (registerMap.size() > 0) {
+            if (!registerMap.isEmpty()) {
                 environment.registerExecutor(registerMap);
             }
-            if (globalContextInfo.size() > 0) {
+            if (!globalContextInfo.isEmpty()) {
                 environment.registerGlobalContextParam(globalContextInfo);
             }
             magicExpression.environment = environment;
