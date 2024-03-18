@@ -116,7 +116,8 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
         });
 
         // 延迟10秒上报，每5秒上报一次数据
-        scheduler.scheduleWithFixedDelay(this::refreshNodeInfo, RandomUtils.nextInt(1,1000) * 100L, property.getWorkerHeartbeatInterval(),
+        scheduler.scheduleWithFixedDelay(this::refreshNodeInfo, RandomUtils.nextInt(1, 1000) * 100L,
+            property.getWorkerHeartbeatInterval(),
             TimeUnit.MILLISECONDS);
     }
 
@@ -258,9 +259,10 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
         }
 
         // tx
-        Pair<Boolean, WorkerNode> pair = transactionSupport
-            .execute(() -> doApplyWorkerFromExistExpire(minId, property.getGroup(), uidKey, processId, ip,
-                property.getWorkerExpireInterval()));
+        Pair<Boolean, WorkerNode> pair =
+            transactionSupport
+                .execute(
+                    () -> doApplyWorkerFromExistExpire(minId, property.getGroup(), property.getWorkerExpireInterval()));
         if (pair.getKey()) {
             workerNode = pair.getValue();
             return true;
@@ -346,14 +348,10 @@ public class DatabaseWorkerIdAssigner implements WorkerIdAssigner {
      *
      * @param minId minId
      * @param group group
-     * @param uidKey uidKey
-     * @param processId process
-     * @param ip local ip
      * @param expireInterval worker expire interval
      * @return key: exist flag, value: work node
      */
-    public Pair<Boolean, WorkerNode> doApplyWorkerFromExistExpire(Long minId, String group, String uidKey,
-        String processId, String ip, long expireInterval) {
+    public Pair<Boolean, WorkerNode> doApplyWorkerFromExistExpire(Long minId, String group, long expireInterval) {
 
         WorkerNode existedWorkerNode = workerNodeDAO.selectForUpdate(minId);
 
