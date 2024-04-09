@@ -2,7 +2,7 @@ package com.openquartz.sequence.core.expr;
 
 import com.google.common.collect.Lists;
 import com.openquartz.sequence.core.expr.cmd.AssignExtParam;
-import com.openquartz.sequence.core.expr.cmd.MagicExpression;
+import com.openquartz.sequence.core.expr.cmd.ExpressionEngine;
 import com.openquartz.sequence.core.expr.executors.SeqExecutor;
 import com.openquartz.sequence.core.persist.model.SequenceTemplate;
 import java.util.List;
@@ -12,12 +12,12 @@ import java.util.List;
  **/
 public class SequenceGenerateServiceImpl implements SequenceGenerateService {
 
-    private final MagicExpression magicExpression;
+    private final ExpressionEngine expressionEngine;
     private final SequenceTemplateProvider sequenceTemplateProvider;
 
     public SequenceGenerateServiceImpl(SequenceTemplateProvider sequenceTemplateProvider) {
         this.sequenceTemplateProvider = sequenceTemplateProvider;
-        this.magicExpression = MagicExpression
+        this.expressionEngine = ExpressionEngine
             .builder()
             .registerExecutor("seq", SeqExecutor.class)
             .build();
@@ -26,13 +26,13 @@ public class SequenceGenerateServiceImpl implements SequenceGenerateService {
     @Override
     public String generateCode(String registerCode) {
         SequenceTemplate template = sequenceTemplateProvider.get(registerCode);
-        return magicExpression.execute(template.getExpression());
+        return expressionEngine.execute(template.getExpression());
     }
 
     @Override
     public String generateCode(String registerCode, AssignExtParam assignExtParam) {
         SequenceTemplate template = sequenceTemplateProvider.get(registerCode);
-        return magicExpression.execute(template.getExpression(), assignExtParam.getParams());
+        return expressionEngine.execute(template.getExpression(), assignExtParam.getParams());
     }
 
     @Override
@@ -40,7 +40,7 @@ public class SequenceGenerateServiceImpl implements SequenceGenerateService {
         SequenceTemplate template = sequenceTemplateProvider.get(registerCode);
         List<String> sequenceResultList = Lists.newArrayListWithCapacity(qty);
         for (int i = 0; i < qty; i++) {
-            sequenceResultList.add(magicExpression.execute(template.getExpression()));
+            sequenceResultList.add(expressionEngine.execute(template.getExpression()));
         }
         return sequenceResultList;
     }
@@ -50,7 +50,7 @@ public class SequenceGenerateServiceImpl implements SequenceGenerateService {
         SequenceTemplate template = sequenceTemplateProvider.get(registerCode);
         List<String> sequenceResultList = Lists.newArrayListWithCapacity(qty);
         for (int i = 0; i < qty; i++) {
-            sequenceResultList.add(magicExpression.execute(template.getExpression(), param.getParams()));
+            sequenceResultList.add(expressionEngine.execute(template.getExpression(), param.getParams()));
         }
         return sequenceResultList;
     }

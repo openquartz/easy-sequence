@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * @author svnee
  */
-public class MagicExpression {
+public class ExpressionEngine {
 
     private ExprExecuteStrategy strategy;
     private Environment environment;
@@ -24,13 +24,15 @@ public class MagicExpression {
     }
 
     public String execute(String expr, Map<String, String> localContextParams) {
-        expr = wrapAsConstCmd(expr);
-        if (localContextParams != null) {
-            registerLocalContextParams(localContextParams);
+        try {
+            expr = wrapAsConstCmd(expr);
+            if (localContextParams != null) {
+                registerLocalContextParams(localContextParams);
+            }
+            return strategy.exec(expr, environment);
+        } finally {
+            clearLocalContextParams();
         }
-        String result = strategy.exec(expr, environment);
-        clearLocalContextParams();
-        return result;
     }
 
     private void registerLocalContextParams(Map<String, String> localContextParams) {
@@ -45,15 +47,15 @@ public class MagicExpression {
         return String.format("{const %s}", expr);
     }
 
-    private MagicExpression() {
+    private ExpressionEngine() {
 
     }
 
-    public static MagicExpressionBuilder builder() {
-        return new MagicExpressionBuilder();
+    public static ExpressionEngineBuilder builder() {
+        return new ExpressionEngineBuilder();
     }
 
-    public static class MagicExpressionBuilder {
+    public static class ExpressionEngineBuilder {
 
         private ExprExecuteStrategy strategy = ExprExecuteStrategyFactory.getDefaultStrategy();
         private final Map<String, Class<? extends CommandExecutor>> registerMap = new HashMap<>();
@@ -62,37 +64,37 @@ public class MagicExpression {
          */
         private final Map<String, String> globalContextInfo = new HashMap<>();
 
-        public MagicExpressionBuilder setStrategyAsDefault() {
+        public ExpressionEngineBuilder setStrategyAsDefault() {
             this.strategy = ExprExecuteStrategyFactory.getDefaultStrategy();
             return this;
         }
 
-        public MagicExpressionBuilder setStrategy(ExprExecuteStrategy strategy) {
+        public ExpressionEngineBuilder setStrategy(ExprExecuteStrategy strategy) {
             this.strategy = strategy;
             return this;
         }
 
-        public MagicExpressionBuilder registerExecutor(String cmdName, Class<? extends CommandExecutor> clazz) {
+        public ExpressionEngineBuilder registerExecutor(String cmdName, Class<? extends CommandExecutor> clazz) {
             this.registerMap.put(cmdName, clazz);
             return this;
         }
 
-        public MagicExpressionBuilder registerGlobalContextInfos(Map<String, String> globalContextInfo) {
+        public ExpressionEngineBuilder registerGlobalContextInfos(Map<String, String> globalContextInfo) {
             if (globalContextInfo != null) {
                 this.globalContextInfo.putAll(globalContextInfo);
             }
             return this;
         }
 
-        public MagicExpressionBuilder registerGlobalContextInfo(String paramName, String value) {
+        public ExpressionEngineBuilder registerGlobalContextInfo(String paramName, String value) {
             if (paramName != null && value != null) {
                 this.globalContextInfo.put(paramName, value);
             }
             return this;
         }
 
-        public MagicExpression build() {
-            MagicExpression magicExpression = new MagicExpression();
+        public ExpressionEngine build() {
+            ExpressionEngine expressionEngine = new ExpressionEngine();
             Environment environment = new Environment();
             environment.setExecutorFactory(new ExecutorFactory(new ExecutorRegistry()));
             if (!registerMap.isEmpty()) {
@@ -101,13 +103,13 @@ public class MagicExpression {
             if (!globalContextInfo.isEmpty()) {
                 environment.registerGlobalContextParam(globalContextInfo);
             }
-            magicExpression.environment = environment;
+            expressionEngine.environment = environment;
             if (this.strategy == null) {
-                magicExpression.strategy = ExprExecuteStrategyFactory.getDefaultStrategy();
+                expressionEngine.strategy = ExprExecuteStrategyFactory.getDefaultStrategy();
             } else {
-                magicExpression.strategy = this.strategy;
+                expressionEngine.strategy = this.strategy;
             }
-            return magicExpression;
+            return expressionEngine;
         }
     }
 }
