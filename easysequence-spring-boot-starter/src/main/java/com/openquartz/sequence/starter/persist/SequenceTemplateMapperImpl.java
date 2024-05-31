@@ -27,8 +27,7 @@ public class SequenceTemplateMapperImpl implements SequenceTemplateMapper {
     @Override
     public SequenceTemplate selectByRegisterCode(String registerCode) {
         List<SequenceTemplate> templateList = jdbcTemplate
-            .query(SEQUENCE_TEMPLATE_QUERY_SQL,
-                new Object[]{registerCode}, new SequenceTemplateRowMapper());
+            .query(SEQUENCE_TEMPLATE_QUERY_SQL, new Object[]{registerCode}, new SequenceTemplateRowMapper());
         return CollectionUtils.isNotEmpty(templateList) ? templateList.get(0) : null;
     }
 

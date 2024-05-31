@@ -1,3 +1,9 @@
+
+<div align=center><img src="/doc/image/logo.png"/></div>
+
+<div align=center> Generate Id And Sequence Easier!!! </div>
+
+
 # EasySequence 序列生成器
 
 -----
