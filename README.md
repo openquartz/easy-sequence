@@ -1,5 +1,5 @@
 
-<div align=center><img src="/doc/image/logo.png"/></div>
+<div align=center><img src="/doc/image/logo.png" width="200"/></div>
 
 <div align=center> Generate Id And Sequence Easier!!! </div>
 
