@@ -243,10 +243,23 @@ easysequence:
 语法：`{const 固定常量前缀}`
 
 ###### 时间
+###### 获取当前时间
+语法：`{time 输出时间格式}`
 
-语法：`{time 时间格式}`
+- 时间格式目前支持：`yyyyMMdd`,`yyyyMMddHHmmss`,`yyyy-MM-dd`,`yyyyMMddHHmmssSSS`,`yyMMddHHmmss`,`yyMMdd`,
 
-时间格式目前支持：`yyyyMMddHHmmss`
+- 时间戳格式为: `Timestamp`(毫秒级别),`Timestamp-s`(秒级别)
+
+###### 当前时间累加
+语法：`{time_add 增加数值 时间单位 输出时间格式}`
+
+要求：增加数值为整数
+
+时间单位目前支持：`Y`: 年, `M`: 月,`D`: 天, `H`: 小时, `m`: 分钟, `s`: 秒
+
+- 时间格式目前支持：`yyyyMMdd`,`yyyyMMddHHmmss`,`yyyy-MM-dd`,`yyyyMMddHHmmssSSS`,`yyMMddHHmmss`,`yyMMdd`,
+
+- 时间戳格式为: `Timestamp`(毫秒级别),`Timestamp-s`(秒级别)
 
 ###### 序列
 

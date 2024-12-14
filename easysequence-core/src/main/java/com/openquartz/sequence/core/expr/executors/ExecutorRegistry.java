@@ -3,6 +3,7 @@ package com.openquartz.sequence.core.expr.executors;
 import static com.openquartz.sequence.core.expr.exception.CommandExceptionCode.COMMAND_NOT_SUPPORT_ERROR;
 
 import com.openquartz.sequence.generator.common.exception.Asserts;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,7 +45,8 @@ public class ExecutorRegistry {
     public void registerDefault() {
         register("const", ConstExecutor.class);
         register("time", TimeExecutor.class);
-        register("fix", com.openquartz.sequence.core.expr.executors.FixLengthExecutor.class);
+        register("time_add", TimeAddExecutor.class);
+        register("fix", FixLengthExecutor.class);
         register("env", EnvExecutor.class);
         register("rand_n", RandomDigitExecutor.class);
         register("rand_c", RandomAlphaNumExecutor.class);

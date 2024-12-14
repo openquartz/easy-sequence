@@ -1,34 +1,25 @@
 package com.openquartz.sequence.core.expr.executors;
 
-import com.google.common.collect.Lists;
 import com.openquartz.sequence.core.expr.cmd.Environment;
 import com.openquartz.sequence.core.expr.cmd.Command;
 import com.openquartz.sequence.core.expr.cmd.Result;
 import com.openquartz.sequence.generator.common.exception.Asserts;
 import com.openquartz.sequence.generator.common.exception.CommonErrorCode;
+
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 /**
+ * 功能：输出当前时间
+ * 格式：time 时间格式
+ *
  * @author svnee
  */
-public class TimeExecutor implements CommandExecutor {
-
-    private static final List<String> AVAILABLE_TIME_FORMATS = Lists.newArrayList(
-        "yyyyMMdd",
-        "yyyyMMddHHmmss",
-        "yyyy-MM-dd",
-        "yyyyMMddHHmmssSSS",
-        "yyMMddHHmmss",
-        "yyMMdd"
-    );
+public class TimeExecutor extends TimeFormatExecutor {
 
     @Override
     public Result exec(Command command) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(command.getParams().get(0));
-        String formatResult = formatter.format(LocalDateTime.now());
-        return Result.success(formatResult);
+        LocalDateTime localTime = LocalDateTime.now();
+        return Result.success(formatTime(localTime, command.getParams().get(0)));
     }
 
     @Override
@@ -36,8 +27,7 @@ public class TimeExecutor implements CommandExecutor {
         Asserts.notNull(command, CommonErrorCode.PARAM_ILLEGAL_ERROR);
         Asserts.notNull(command.getParams(), CommonErrorCode.PARAM_ILLEGAL_ERROR);
         Asserts.isTrue(!command.getParams().isEmpty(), CommonErrorCode.PARAM_ILLEGAL_ERROR);
-        Asserts
-            .isTrue(AVAILABLE_TIME_FORMATS.contains(command.getParams().get(0)), CommonErrorCode.PARAM_ILLEGAL_ERROR);
+        checkTimePattern(command.getParams().get(0));
     }
 
     @Override
