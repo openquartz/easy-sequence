@@ -9,7 +9,6 @@ import com.openquartz.sequence.generator.common.exception.Asserts;
 import com.openquartz.sequence.generator.common.exception.CommonErrorCode;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Set;
 
@@ -60,18 +59,6 @@ public class TimeAddExecutor extends TimeFormatExecutor {
                 throw new IllegalArgumentException("time unit error");
         }
         return localTime;
-    }
-
-    private String parseTimeFormat(LocalDateTime localTime, String timestampPattern) {
-
-        switch (timestampPattern) {
-            case "Timestamp":
-                return String.valueOf(localTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-            case "Timestamp-s":
-                return String.valueOf(localTime.atZone(ZoneId.systemDefault()).toInstant().getEpochSecond());
-            default:
-                return null;
-        }
     }
 
     @Override
