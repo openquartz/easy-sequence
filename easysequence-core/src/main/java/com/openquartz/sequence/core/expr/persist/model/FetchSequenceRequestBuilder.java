@@ -1,6 +1,7 @@
 package com.openquartz.sequence.core.expr.persist.model;
 
 import com.openquartz.sequence.core.expr.cmd.AssignExtParam;
+import lombok.Getter;
 
 /**
  * FetchSequenceRequestBuilder
@@ -49,6 +50,7 @@ public class FetchSequenceRequestBuilder {
      *
      * @author svnee
      */
+    @Getter
     public static class FetchSequenceRequest {
 
         /**
@@ -76,36 +78,16 @@ public class FetchSequenceRequestBuilder {
             this.seqCode = seqCode;
         }
 
-        public String getSeqCode() {
-            return seqCode;
-        }
-
-        public AssignExtParam getParam() {
-            return param;
-        }
-
         private void setParam(AssignExtParam param) {
             this.param = param;
-        }
-
-        public long getStep() {
-            return step;
         }
 
         private void setStep(long step) {
             this.step = step;
         }
 
-        public int getFetchCount() {
-            return fetchCount;
-        }
-
         private void setFetchCount(int fetchCount) {
             this.fetchCount = fetchCount;
-        }
-
-        public boolean isWait() {
-            return wait;
         }
 
         private void setWait(boolean wait) {
